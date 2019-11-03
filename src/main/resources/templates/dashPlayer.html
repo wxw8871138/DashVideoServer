@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+    <head>
+        <meta charset="UTF-8">
+        <title>Player</title>
+
+    </head>
+    <body>
+        <div>
+            <a th:href="@{/index}">home</a>
+        </div>
+        <div>
+            <p>Now playing from: <span th:text="${videoURL}"></span></p>
+            <video data-dashjs-player autoplay th:src="${videoURL}" controls></video>
+        </div>
+        <script type="text/javascript" th:src="@{../static/js/dash.all.min.js}"></script>
+    </body>
+</html>

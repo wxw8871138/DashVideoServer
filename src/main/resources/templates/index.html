@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Home</title>
+
+    </head>
+    <body>
+        <div>
+            <a th:href="@{/upload}">upload</a>
+        </div>
+        <div>
+            <form action="#" th:action="@{/player}" method="get">
+                Video URL: <input type="text" name="videoURL" maxlength="1000"><br>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th> Video </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${files.empty}">
+                <td colspan="2"> No Books Available </td>
+            </tr>
+            <tr th:each="file : ${files}">
+                <td><a th:text="${file}" href="${file}" th:href="@{/player(videoURL=${file})}"></a></td>
+            </tr>
+            </tbody>
+        </table>
+    </body>
+</html>
