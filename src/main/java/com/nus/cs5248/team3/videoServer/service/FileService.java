@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -128,5 +129,23 @@ public class FileService {
             logger.trace(e.getStackTrace().toString());
             e.printStackTrace();
         }
+    }
+
+    public void generateMPD(String videoID) {
+        List<String> files = null;
+        try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
+            files = walk.filter(Files::isRegularFile)
+                    .filter(f->f.getFileName().toString().startsWith(videoID))
+                    .sorted(Comparator.comparing(p -> p.getFileName().toString())) //sort from begin segment to end segment
+                    .map(x -> ServletUriComponentsBuilder.fromCurrentContextPath()
+                            .path("/downloadFile/")
+                            .path(x.getFileName().toString())
+                            .toUriString()).collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.trace(e.getLocalizedMessage());
+            logger.trace(e.getStackTrace().toString());
+        }
+
     }
 }

@@ -19,6 +19,7 @@
             <p>Now playing from: <span th:text="${videoURL}"></span></p>
             <video data-dashjs-player autoplay th:src="${videoURL}" controls></video>
         </div>
-        <script type="text/javascript" th:src="@{../static/js/dash.all.min.js}"></script>
+<!--        <script type="text/javascript" th:src="@{../static/js/dash.all.min.js}"></script>-->
+        <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
     </body>
 </html>
