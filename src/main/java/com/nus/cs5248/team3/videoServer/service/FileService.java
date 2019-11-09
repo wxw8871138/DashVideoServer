@@ -1,8 +1,12 @@
 package com.nus.cs5248.team3.videoServer.service;
 
+import com.google.common.collect.Maps;
+import com.google.common.io.Resources;
+import com.hubspot.jinjava.Jinjava;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
+import org.apache.commons.io.Charsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +26,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,6 +38,8 @@ public class FileService {
     private String FFMPEG_PATH;
     @Value("${ffprobe_path}")
     private String FFPROBE_PATH;
+    @Value("${mpd_template_path}")
+    private String MPD_TEMPLATE_PATH;
     private static final Logger logger
             = LoggerFactory.getLogger(FileService.class);
     private static Path fileStorageLocation;
@@ -135,12 +143,19 @@ public class FileService {
         List<String> files = null;
         try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
             files = walk.filter(Files::isRegularFile)
-                    .filter(f->f.getFileName().toString().startsWith(videoID))
+                    .filter(f -> f.getFileName().toString().startsWith(videoID))
                     .sorted(Comparator.comparing(p -> p.getFileName().toString())) //sort from begin segment to end segment
-                    .map(x -> ServletUriComponentsBuilder.fromCurrentContextPath()
-                            .path("/downloadFile/")
-                            .path(x.getFileName().toString())
-                            .toUriString()).collect(Collectors.toList());
+                    .map(x -> (x.getFileName().toString()))
+                    .collect(Collectors.toList());
+            Jinjava jinjava = new Jinjava();
+            Map<String, Object> context = Maps.newHashMap();
+            context.put("name", videoID);
+            context.put("segments_720p",files);
+            String template = Resources.toString(Resources.getResource("mpdTemplate.xml"), Charsets.UTF_8);
+            String renderedTemplate = jinjava.render(template, context);
+            Path path = this.fileStorageLocation.resolve(videoID + ".mpd");
+            byte[] strToBytes = renderedTemplate.getBytes();
+            Files.write(path, strToBytes);
         } catch (IOException e) {
             e.printStackTrace();
             logger.trace(e.getLocalizedMessage());
