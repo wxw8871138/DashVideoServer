@@ -38,8 +38,6 @@ public class FileService {
     private String FFMPEG_PATH;
     @Value("${ffprobe_path}")
     private String FFPROBE_PATH;
-    @Value("${mpd_template_path}")
-    private String MPD_TEMPLATE_PATH;
     private static final Logger logger
             = LoggerFactory.getLogger(FileService.class);
     private static Path fileStorageLocation;
@@ -144,12 +142,13 @@ public class FileService {
         try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
             files = walk.filter(Files::isRegularFile)
                     .filter(f -> f.getFileName().toString().startsWith(videoID))
+                    .filter(f -> "mp4".equals(com.google.common.io.Files.getFileExtension(f.getFileName().toString())))
                     .sorted(Comparator.comparing(p -> p.getFileName().toString())) //sort from begin segment to end segment
                     .map(x -> (x.getFileName().toString()))
                     .collect(Collectors.toList());
             Jinjava jinjava = new Jinjava();
             Map<String, Object> context = Maps.newHashMap();
-            context.put("name", videoID);
+            context.put("name", "SampleVideo_1280x720_encoded_360p_dashinit.mp4");
             context.put("segments_720p",files);
             String template = Resources.toString(Resources.getResource("mpdTemplate.xml"), Charsets.UTF_8);
             String renderedTemplate = jinjava.render(template, context);

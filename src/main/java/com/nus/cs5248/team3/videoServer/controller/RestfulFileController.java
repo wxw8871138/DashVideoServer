@@ -39,7 +39,7 @@ public class RestfulFileController {
                 .path(fileName)
                 .toUriString();
 //        fileService.encode(fileName);
-        fileService.generateMPD("videoid");
+        fileService.generateMPD("test");
         return new UploadFileResponse(fileName, fileDownloadUri,
                 file.getContentType(), file.getSize());
     }
