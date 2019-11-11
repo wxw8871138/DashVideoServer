@@ -147,9 +147,10 @@ public class FileService {
         }
         concatCommand = concatCommand + " " + concatFile;
 
-        String mpdCommand = "";
+        String mpdCommand = "mp4box -dash-strict 1000 -rap -frag-rap -bs-switching no -profile full";
+        mpdCommand = mpdCommand + " " + concatFile;
         ProcessBuilder builder = new ProcessBuilder(
-                "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + concatCommand + " && ");
+                "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + concatCommand + " && " + mpdCommand);
         builder.redirectErrorStream(true);
         Process p = null;
         try {

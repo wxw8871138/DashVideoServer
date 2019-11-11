@@ -25,13 +25,15 @@ public class RestfulFileController {
     private FileService fileService;
     private static final Logger logger
             = LoggerFactory.getLogger(RestfulFileController.class);
-
+    private static int FILE_NUMER = -1;
 
     /* API for uploading files to server
     */
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public UploadFileResponse handleFileUpload(@RequestParam("file") MultipartFile file) throws Exception {
         int fileNumber = 3;
+//        if("txt".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){}
+        FILE_NUMER = fileNumber;
         String videoID = "2019-11-11-06-03-33";
         if(!"mp4".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){
             throw new Exception("File is not mp4 type. Cannot upload");
@@ -43,12 +45,12 @@ public class RestfulFileController {
                 .toUriString();
         fileService.encode(fileName);
         List<String> uploadedFiles = fileService.getUploadedFiles(videoID);
-        if( uploadedFiles.size() == fileNumber ){
+        if( uploadedFiles.size() == FILE_NUMER ){
             fileService.generateMPD(uploadedFiles, "720p", videoID);
-//            fileService.generateMPD(uploadedFiles, "480p", videoID);
-//            fileService.generateMPD(uploadedFiles, "360p", videoID);
-//            fileService.generateMPD(uploadedFiles, "240p", videoID);
-
+            fileService.generateMPD(uploadedFiles, "480p", videoID);
+            fileService.generateMPD(uploadedFiles, "360p", videoID);
+            fileService.generateMPD(uploadedFiles, "240p", videoID);
+            FILE_NUMER = -1;
         }
         return new UploadFileResponse(fileName, fileDownloadUri,
                 file.getContentType(), file.getSize());
