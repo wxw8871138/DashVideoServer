@@ -17,6 +17,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 public class RestfulFileController {
@@ -30,6 +31,8 @@ public class RestfulFileController {
     */
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public UploadFileResponse handleFileUpload(@RequestParam("file") MultipartFile file) throws Exception {
+        int fileNumber = 3;
+        String videoID = "2019-11-11-06-03-33";
         if(!"mp4".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){
             throw new Exception("File is not mp4 type. Cannot upload");
         }
@@ -38,8 +41,15 @@ public class RestfulFileController {
                 .path("/downloadFile/")
                 .path(fileName)
                 .toUriString();
-//        fileService.encode(fileName);
-        fileService.generateMPD("test");
+        fileService.encode(fileName);
+        List<String> uploadedFiles = fileService.getUploadedFiles(videoID);
+        if( uploadedFiles.size() == fileNumber ){
+            fileService.generateMPD(uploadedFiles, "720p", videoID);
+//            fileService.generateMPD(uploadedFiles, "480p", videoID);
+//            fileService.generateMPD(uploadedFiles, "360p", videoID);
+//            fileService.generateMPD(uploadedFiles, "240p", videoID);
+
+        }
         return new UploadFileResponse(fileName, fileDownloadUri,
                 file.getContentType(), file.getSize());
     }

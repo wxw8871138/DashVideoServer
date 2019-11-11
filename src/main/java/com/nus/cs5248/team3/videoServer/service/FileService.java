@@ -18,8 +18,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -124,12 +126,12 @@ public class FileService {
             FFprobe ffprobe = new FFprobe(FFPROBE_PATH);
             FFmpegExecutor executor = new FFmpegExecutor(ffmpeg, ffprobe);
             String filePath = this.fileStorageLocation.resolve(fileName).normalize().toAbsolutePath().toString();
-            int dotPostion = filePath.indexOf('.');
+            int slashPostion = filePath.lastIndexOf(File.separator);
 
-            encodeUtil.encodeTo720p(filePath, dotPostion, executor);
-            encodeUtil.encodeTo480p(filePath, dotPostion, executor);
-            encodeUtil.encodeTo360p(filePath, dotPostion, executor);
-            encodeUtil.encodeTo240p(filePath, dotPostion, executor);
+            encodeUtil.encodeTo720p(filePath, slashPostion, executor);
+            encodeUtil.encodeTo480p(filePath, slashPostion, executor);
+            encodeUtil.encodeTo360p(filePath, slashPostion, executor);
+            encodeUtil.encodeTo240p(filePath, slashPostion, executor);
         } catch (IOException e) {
             logger.trace(e.getMessage());
             logger.trace(e.getStackTrace().toString());
@@ -137,7 +139,56 @@ public class FileService {
         }
     }
 
-    public void generateMPD(String videoID) {
+    public void generateMPD(List<String> uploadedFiles, String resolution, String videoID) {
+        String concatFile = resolution + "_" + videoID + ".mp4";
+        String concatCommand = "MP4Box -add " + resolution + "_" + uploadedFiles.get(0);
+        for (int i = 1; i < uploadedFiles.size(); i++) {
+            concatCommand = concatCommand + " -cat " + resolution + "_" + uploadedFiles.get(i);
+        }
+        concatCommand = concatCommand + " " + concatFile;
+
+        String mpdCommand = "";
+        ProcessBuilder builder = new ProcessBuilder(
+                "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + concatCommand + " && ");
+        builder.redirectErrorStream(true);
+        Process p = null;
+        try {
+            p = builder.start();
+            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            while (true) {
+                line = r.readLine();
+                if (line == null) {
+                    break;
+                }
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.trace(e.getMessage());
+            logger.trace(e.getStackTrace().toString());
+        }
+
+//
+//        try {
+//            Jinjava jinjava = new Jinjava();
+//            Map<String, Object> context = Maps.newHashMap();
+//            context.put("name", "SampleVideo_1280x720_encoded_360p_dashinit.mp4");
+//            context.put("segments_720p", uploadedFiles);
+//            String template = Resources.toString(Resources.getResource("mpdTemplate.xml"), Charsets.UTF_8);
+//            String renderedTemplate = jinjava.render(template, context);
+//            Path path = this.fileStorageLocation.resolve(videoID + ".mpd");
+//            byte[] strToBytes = renderedTemplate.getBytes();
+//            Files.write(path, strToBytes);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            logger.trace(e.getLocalizedMessage());
+//            logger.trace(e.getStackTrace().toString());
+//        }
+
+    }
+
+    public List<String> getUploadedFiles(String videoID) {
         List<String> files = null;
         try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
             files = walk.filter(Files::isRegularFile)
@@ -146,20 +197,9 @@ public class FileService {
                     .sorted(Comparator.comparing(p -> p.getFileName().toString())) //sort from begin segment to end segment
                     .map(x -> (x.getFileName().toString()))
                     .collect(Collectors.toList());
-            Jinjava jinjava = new Jinjava();
-            Map<String, Object> context = Maps.newHashMap();
-            context.put("name", "SampleVideo_1280x720_encoded_360p_dashinit.mp4");
-            context.put("segments_720p",files);
-            String template = Resources.toString(Resources.getResource("mpdTemplate.xml"), Charsets.UTF_8);
-            String renderedTemplate = jinjava.render(template, context);
-            Path path = this.fileStorageLocation.resolve(videoID + ".mpd");
-            byte[] strToBytes = renderedTemplate.getBytes();
-            Files.write(path, strToBytes);
         } catch (IOException e) {
             e.printStackTrace();
-            logger.trace(e.getLocalizedMessage());
-            logger.trace(e.getStackTrace().toString());
         }
-
+        return files;
     }
 }

@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 public class EncodeUtil {
     private static final Logger logger
             = LoggerFactory.getLogger(EncodeUtil.class);
-    public void encodeTo720p(String filePath, int dotPostion, FFmpegExecutor executor) {
+    public void encodeTo720p(String filePath, int slashPostion, FFmpegExecutor executor) {
         logger.info("Start encoding 720p now");
-        String encodedFilePath = filePath.substring(0, dotPostion) + "_encoded_720p" + filePath.substring(dotPostion);
+        String encodedFilePath = filePath.substring(0, slashPostion+1) + "720p_" + filePath.substring(slashPostion+1);
         FFmpegBuilder builder = new FFmpegBuilder().
                 setInput(filePath)     // Filename, or a FFmpegProbeResult
                 .overrideOutputFiles(true) // Override the output if it exists
@@ -39,10 +39,10 @@ public class EncodeUtil {
         executor.createJob(builder).run();
     }
 
-    public void encodeTo480p(String filePath, int dotPostion, FFmpegExecutor executor) {
+    public void encodeTo480p(String filePath, int slashPostion, FFmpegExecutor executor) {
         logger.info("Start encoding 480p now");
 
-        String encodedFilePath = filePath.substring(0, dotPostion) + "_encoded_480p" + filePath.substring(dotPostion);
+        String encodedFilePath = filePath.substring(0, slashPostion+1) + "480p_" + filePath.substring(slashPostion+1);
         FFmpegBuilder builder = new FFmpegBuilder().
                 setInput(filePath)     // Filename, or a FFmpegProbeResult
                 .overrideOutputFiles(true) // Override the output if it exists
@@ -69,10 +69,10 @@ public class EncodeUtil {
         executor.createJob(builder).run();
     }
 
-    public void encodeTo360p(String filePath, int dotPostion, FFmpegExecutor executor) {
+    public void encodeTo360p(String filePath, int slashPostion, FFmpegExecutor executor) {
         logger.info("Start encoding 360p now");
 
-        String encodedFilePath = filePath.substring(0, dotPostion) + "_encoded_360p" + filePath.substring(dotPostion);
+        String encodedFilePath = filePath.substring(0, slashPostion+1) + "360p_" + filePath.substring(slashPostion+1);
         FFmpegBuilder builder = new FFmpegBuilder().
                 setInput(filePath)     // Filename, or a FFmpegProbeResult
                 .overrideOutputFiles(true) // Override the output if it exists
@@ -100,10 +100,10 @@ public class EncodeUtil {
     }
 
 
-    public void encodeTo240p(String filePath, int dotPostion, FFmpegExecutor executor) {
+    public void encodeTo240p(String filePath, int slashPostion, FFmpegExecutor executor) {
         logger.info("Start encoding 240p now");
 
-        String encodedFilePath = filePath.substring(0, dotPostion) + "_encoded_240p" + filePath.substring(dotPostion);
+        String encodedFilePath = filePath.substring(0, slashPostion+1) + "240p_" + filePath.substring(slashPostion+1);
         FFmpegBuilder builder = new FFmpegBuilder().
                 setInput(filePath)     // Filename, or a FFmpegProbeResult
                 .overrideOutputFiles(true) // Override the output if it exists
