@@ -7,6 +7,7 @@ import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import org.apache.commons.io.Charsets;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -147,16 +148,28 @@ public class FileService {
         }
         concatCommand = concatCommand + " " + concatFile;
 
-        String mpdCommand = "mp4box -dash-strict 1000 -rap -frag-rap -bs-switching no -profile full";
+        String mpdCommand = "mp4box -dash-strict 1000 -rap -frag-rap -profile full";
         mpdCommand = mpdCommand + " " + concatFile;
-        ProcessBuilder builder = new ProcessBuilder(
-                "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + concatCommand + " && " + mpdCommand);
-        builder.redirectErrorStream(true);
+        ProcessBuilder concatBuilder = new ProcessBuilder(
+                "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + concatCommand);
+        ProcessBuilder mpdBuilder = new ProcessBuilder(         "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + mpdCommand);
+        concatBuilder.redirectErrorStream(true);
+        mpdBuilder.redirectErrorStream(true);
         Process p = null;
+        Process p2 = null;
         try {
-            p = builder.start();
+            p = concatBuilder.start();
             BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
+            while (true) {
+                line = r.readLine();
+                if (line == null) {
+                    break;
+                }
+                System.out.println(line);
+            }
+            p2 = mpdBuilder.start();
+            r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
             while (true) {
                 line = r.readLine();
                 if (line == null) {
@@ -169,6 +182,7 @@ public class FileService {
             logger.trace(e.getMessage());
             logger.trace(e.getStackTrace().toString());
         }
+
 
 //
 //        try {
@@ -195,12 +209,39 @@ public class FileService {
             files = walk.filter(Files::isRegularFile)
                     .filter(f -> f.getFileName().toString().startsWith(videoID))
                     .filter(f -> "mp4".equals(com.google.common.io.Files.getFileExtension(f.getFileName().toString())))
-                    .sorted(Comparator.comparing(p -> p.getFileName().toString())) //sort from begin segment to end segment
-                    .map(x -> (x.getFileName().toString()))
+                    .sorted(Comparator.comparing(f -> f.getFileName().toString())) //sort from begin segment to end segment
+                    .map(f -> (f.getFileName().toString()))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             e.printStackTrace();
         }
         return files;
+    }
+
+    public void concatMPD(String videoID) {
+        List<File> files = null;
+        int id = 2;
+        try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
+            files = walk.filter(Files::isRegularFile)
+                    .filter(f -> "mpd".equals(com.google.common.io.Files.getFileExtension(f.getFileName().toString())))
+                    .filter(f -> f.getFileName().toString().contains(videoID))
+                    .sorted(Comparator.comparing(f -> f.getFileName().toString()))
+                    .map(f->f.toFile())
+                    .collect(Collectors.toList());
+            File mpdFile = files.get(0);
+            files.remove(mpdFile);
+            String mpdFileContext = FileUtils.readFileToString(mpdFile,Charsets.UTF_8);
+            for (File file:files){
+                String fileContext = FileUtils.readFileToString(file,Charsets.UTF_8);
+                fileContext = fileContext.substring(fileContext.indexOf("<Representation"),fileContext.indexOf("</AdaptationSet>"));
+                fileContext = fileContext.replaceAll("id=\"1\"", "id=\""+id+"\"");
+                mpdFileContext = mpdFileContext.substring(0, mpdFileContext.lastIndexOf("</AdaptationSet>"))+fileContext+mpdFileContext.substring(mpdFileContext.lastIndexOf("</AdaptationSet>"));
+                FileUtils.write(mpdFile, mpdFileContext, Charsets.UTF_8);
+                id ++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

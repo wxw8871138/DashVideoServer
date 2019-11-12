@@ -26,15 +26,14 @@ public class RestfulFileController {
     private static final Logger logger
             = LoggerFactory.getLogger(RestfulFileController.class);
     private static int FILE_NUMER = -1;
-
+    private static String VIDEO_ID = "";
     /* API for uploading files to server
     */
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public UploadFileResponse handleFileUpload(@RequestParam("file") MultipartFile file) throws Exception {
-        int fileNumber = 3;
 //        if("txt".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){}
-        FILE_NUMER = fileNumber;
-        String videoID = "2019-11-11-06-03-33";
+        FILE_NUMER = 3;
+        VIDEO_ID = "20191112-013642";
         if(!"mp4".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){
             throw new Exception("File is not mp4 type. Cannot upload");
         }
@@ -43,14 +42,16 @@ public class RestfulFileController {
                 .path("/downloadFile/")
                 .path(fileName)
                 .toUriString();
-        fileService.encode(fileName);
-        List<String> uploadedFiles = fileService.getUploadedFiles(videoID);
+//        fileService.encode(fileName);
+        List<String> uploadedFiles = fileService.getUploadedFiles(VIDEO_ID);
         if( uploadedFiles.size() == FILE_NUMER ){
-            fileService.generateMPD(uploadedFiles, "720p", videoID);
-            fileService.generateMPD(uploadedFiles, "480p", videoID);
-            fileService.generateMPD(uploadedFiles, "360p", videoID);
-            fileService.generateMPD(uploadedFiles, "240p", videoID);
+            fileService.generateMPD(uploadedFiles, "720p", VIDEO_ID);
+            fileService.generateMPD(uploadedFiles, "480p", VIDEO_ID);
+//            fileService.generateMPD(uploadedFiles, "360p", VIDEO_ID);
+//            fileService.generateMPD(uploadedFiles, "240p", VIDEO_ID);
+            fileService.concatMPD(VIDEO_ID);
             FILE_NUMER = -1;
+            VIDEO_ID = "";
         }
         return new UploadFileResponse(fileName, fileDownloadUri,
                 file.getContentType(), file.getSize());
