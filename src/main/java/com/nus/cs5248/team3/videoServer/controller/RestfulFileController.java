@@ -32,7 +32,7 @@ public class RestfulFileController {
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public UploadFileResponse handleFileUpload(@RequestParam("file") MultipartFile file) throws Exception {
 //        if("txt".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){}
-        FILE_NUMER = 4;
+        FILE_NUMER = 5;
         VIDEO_ID = "20191112-013642";
         if(!"mp4".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){
             throw new Exception("File is not mp4 type. Cannot upload");

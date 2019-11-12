@@ -18,7 +18,8 @@ public class VideoController {
      */
     @GetMapping(path = "/index")
     public String index(Model model) {
-        List<String> files = fileService.findAll();
+//        List<String> files = fileService.findAll();
+        List<String> files = fileService.findAllMpd();
         model.addAttribute("files", files);
         return "index";
     }

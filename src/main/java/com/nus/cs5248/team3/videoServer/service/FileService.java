@@ -242,4 +242,21 @@ public class FileService {
         }
 
     }
+
+    public List<String> findAllMpd() {
+        List<String> files = null;
+        try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
+            files = walk.filter(Files::isRegularFile)
+                    .filter(f -> "mpd".equals(com.google.common.io.Files.getFileExtension(f.getFileName().toString())))
+                    .map(x -> ServletUriComponentsBuilder.fromCurrentContextPath()
+                            .path("/downloadFile/")
+                            .path(x.getFileName().toString())
+                            .toUriString()).collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.trace(e.getLocalizedMessage());
+            logger.trace(e.getStackTrace().toString());
+        }
+        return files;
+    }
 }
