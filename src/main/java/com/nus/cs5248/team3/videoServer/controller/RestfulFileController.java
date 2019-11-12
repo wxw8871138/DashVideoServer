@@ -32,7 +32,7 @@ public class RestfulFileController {
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public UploadFileResponse handleFileUpload(@RequestParam("file") MultipartFile file) throws Exception {
 //        if("txt".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){}
-        FILE_NUMER = 3;
+        FILE_NUMER = 4;
         VIDEO_ID = "20191112-013642";
         if(!"mp4".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){
             throw new Exception("File is not mp4 type. Cannot upload");
@@ -42,13 +42,13 @@ public class RestfulFileController {
                 .path("/downloadFile/")
                 .path(fileName)
                 .toUriString();
-//        fileService.encode(fileName);
+        fileService.encode(fileName);
         List<String> uploadedFiles = fileService.getUploadedFiles(VIDEO_ID);
         if( uploadedFiles.size() == FILE_NUMER ){
             fileService.generateMPD(uploadedFiles, "720p", VIDEO_ID);
             fileService.generateMPD(uploadedFiles, "480p", VIDEO_ID);
-//            fileService.generateMPD(uploadedFiles, "360p", VIDEO_ID);
-//            fileService.generateMPD(uploadedFiles, "240p", VIDEO_ID);
+            fileService.generateMPD(uploadedFiles, "360p", VIDEO_ID);
+            fileService.generateMPD(uploadedFiles, "240p", VIDEO_ID);
             fileService.concatMPD(VIDEO_ID);
             FILE_NUMER = -1;
             VIDEO_ID = "";

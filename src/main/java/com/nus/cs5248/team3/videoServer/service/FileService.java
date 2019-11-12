@@ -1,8 +1,5 @@
 package com.nus.cs5248.team3.videoServer.service;
 
-import com.google.common.collect.Maps;
-import com.google.common.io.Resources;
-import com.hubspot.jinjava.Jinjava;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
@@ -29,7 +26,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,7 +40,8 @@ public class FileService {
     private static final Logger logger
             = LoggerFactory.getLogger(FileService.class);
     private static Path fileStorageLocation;
-
+    private boolean isWindows = System.getProperty("os.name")
+            .toLowerCase().startsWith("windows");
     @Autowired
     private EncodeUtil encodeUtil;
 
@@ -150,15 +147,27 @@ public class FileService {
 
         String mpdCommand = "mp4box -dash-strict 1000 -rap -frag-rap -profile full";
         mpdCommand = mpdCommand + " " + concatFile;
-        ProcessBuilder concatBuilder = new ProcessBuilder(
-                "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + concatCommand);
-        ProcessBuilder mpdBuilder = new ProcessBuilder(         "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + mpdCommand);
+        ProcessBuilder concatBuilder =null;
+        ProcessBuilder mpdBuilder=null;
+        if (isWindows) {
+             concatBuilder = new ProcessBuilder(
+                    "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + concatCommand);
+             mpdBuilder = new ProcessBuilder(         "cmd.exe", "/c", "cd " + UPLOADED_FOLDER + " && " + mpdCommand);
+
+        } else {
+            concatBuilder = new ProcessBuilder(
+                    "sh", "-c", "cd " + UPLOADED_FOLDER + " && " + concatCommand);
+            mpdBuilder = new ProcessBuilder(         "sh", "-c", "cd " + UPLOADED_FOLDER + " && " + mpdCommand);
+
+        }
         concatBuilder.redirectErrorStream(true);
         mpdBuilder.redirectErrorStream(true);
         Process p = null;
         Process p2 = null;
         try {
             p = concatBuilder.start();
+
+//            p.waitFor();
             BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while (true) {
@@ -168,6 +177,7 @@ public class FileService {
                 }
                 System.out.println(line);
             }
+            p.waitFor();
             p2 = mpdBuilder.start();
             r = new BufferedReader(new InputStreamReader(p2.getInputStream()));
             while (true) {
@@ -177,29 +187,12 @@ public class FileService {
                 }
                 System.out.println(line);
             }
-        } catch (IOException e) {
+            p2.waitFor();
+        } catch (Exception e) {
             e.printStackTrace();
             logger.trace(e.getMessage());
             logger.trace(e.getStackTrace().toString());
         }
-
-
-//
-//        try {
-//            Jinjava jinjava = new Jinjava();
-//            Map<String, Object> context = Maps.newHashMap();
-//            context.put("name", "SampleVideo_1280x720_encoded_360p_dashinit.mp4");
-//            context.put("segments_720p", uploadedFiles);
-//            String template = Resources.toString(Resources.getResource("mpdTemplate.xml"), Charsets.UTF_8);
-//            String renderedTemplate = jinjava.render(template, context);
-//            Path path = this.fileStorageLocation.resolve(videoID + ".mpd");
-//            byte[] strToBytes = renderedTemplate.getBytes();
-//            Files.write(path, strToBytes);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            logger.trace(e.getLocalizedMessage());
-//            logger.trace(e.getStackTrace().toString());
-//        }
 
     }
 
