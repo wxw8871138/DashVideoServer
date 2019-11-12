@@ -232,6 +232,11 @@ public class FileService {
                 FileUtils.write(mpdFile, mpdFileContext, Charsets.UTF_8);
                 id ++;
             }
+            //Rename and clean up useless mpd
+            mpdFile.renameTo(new File(UPLOADED_FOLDER+File.separator+videoID+".mpd"));
+            for (File file: files){
+                file.delete();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
