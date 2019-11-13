@@ -25,7 +25,7 @@ public class RestfulFileController {
     private FileService fileService;
     private static final Logger logger
             = LoggerFactory.getLogger(RestfulFileController.class);
-    private static int FILE_NUMER = -1;
+    private static int FILE_NUMBER = -1;
     private static String VIDEO_ID = "";
 
     /* API for uploading files to server
@@ -36,29 +36,36 @@ public class RestfulFileController {
         if (!isMP4) {
             String finFileName = file.getOriginalFilename();
             if (finFileName.contains("FIN")) {
-                FILE_NUMER = Integer.parseInt(finFileName.substring(finFileName.indexOf("_") + 1, finFileName.lastIndexOf("_")));
+                FILE_NUMBER = Integer.parseInt(finFileName.substring(finFileName.indexOf("_") + 1, finFileName.lastIndexOf("_"))) + 1;
                 VIDEO_ID = finFileName.substring(0, finFileName.indexOf("_"));
+                logger.trace("FILE_NUMBER: " + FILE_NUMBER+ ", VIDEO_ID: " + VIDEO_ID);
             } else {
                 throw new Exception("File is not mp4 type. Cannot upload");
             }
         }
+        System.out.println("FILE_NUMBER:" + FILE_NUMBER);
         String fileName = fileService.store(file);
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/downloadFile/")
                 .path(fileName)
                 .toUriString();
-        if(isMP4){
+        if (isMP4) {
             fileService.encode(fileName);
         }
         List<String> uploadedFiles = fileService.getUploadedFiles(VIDEO_ID);
-        if (uploadedFiles.size() == FILE_NUMER) {
-            fileService.generateMPD(uploadedFiles, "720p", VIDEO_ID);
-            fileService.generateMPD(uploadedFiles, "480p", VIDEO_ID);
-            fileService.generateMPD(uploadedFiles, "360p", VIDEO_ID);
-            fileService.generateMPD(uploadedFiles, "240p", VIDEO_ID);
-            fileService.concatMPD(VIDEO_ID);
-            FILE_NUMER = -1;
-            VIDEO_ID = "";
+        System.out.println("uploadedFiles.size:" + uploadedFiles.size());
+
+        if (uploadedFiles.size() == FILE_NUMBER) {
+            try {
+                fileService.concatSegment(uploadedFiles, "720p", VIDEO_ID);
+                fileService.concatSegment(uploadedFiles, "480p", VIDEO_ID);
+                fileService.concatSegment(uploadedFiles, "360p", VIDEO_ID);
+                fileService.concatSegment(uploadedFiles, "240p", VIDEO_ID);
+                fileService.generateMPD(uploadedFiles, VIDEO_ID);
+            }finally {
+                FILE_NUMBER = -1;
+                VIDEO_ID = "";
+            }
         }
         return new UploadFileResponse(fileName, fileDownloadUri,
                 file.getContentType(), file.getSize());
