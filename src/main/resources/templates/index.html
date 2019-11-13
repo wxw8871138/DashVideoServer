@@ -23,7 +23,7 @@
             </thead>
             <tbody>
             <tr th:if="${files.empty}">
-                <td colspan="2"> No Books Available </td>
+                <td colspan="2"> No Videos Available </td>
             </tr>
             <tr th:each="file : ${files}">
                 <td><a th:text="${file}" href="${file}" th:href="@{/player(videoURL=${file})}"></a></td>

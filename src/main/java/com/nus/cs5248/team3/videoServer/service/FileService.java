@@ -151,7 +151,7 @@ public class FileService {
         }
         concatCommand = concatCommand + " " + concatFile;
 
-        String mpdCommand = "mp4box -dash-strict 1000 -rap -frag-rap -profile full";
+        String mpdCommand = "MP4Box -dash-strict 1000 -rap -frag-rap -profile full";
         mpdCommand = mpdCommand + " " + concatFile;
         ProcessBuilder concatBuilder =null;
         ProcessBuilder mpdBuilder=null;

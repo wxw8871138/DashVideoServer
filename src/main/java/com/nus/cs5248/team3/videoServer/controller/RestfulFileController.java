@@ -27,24 +27,31 @@ public class RestfulFileController {
             = LoggerFactory.getLogger(RestfulFileController.class);
     private static int FILE_NUMER = -1;
     private static String VIDEO_ID = "";
+
     /* API for uploading files to server
-    */
+     */
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public UploadFileResponse handleFileUpload(@RequestParam("file") MultipartFile file) throws Exception {
-//        if("txt".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){}
-        FILE_NUMER = 5;
-        VIDEO_ID = "20191112-013642";
-        if(!"mp4".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())))){
-            throw new Exception("File is not mp4 type. Cannot upload");
+        Boolean isMP4 = "mp4".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())));
+        if (!isMP4) {
+            String finFileName = file.getOriginalFilename();
+            if (finFileName.contains("FIN")) {
+                FILE_NUMER = Integer.parseInt(finFileName.substring(finFileName.indexOf("_") + 1, finFileName.lastIndexOf("_")));
+                VIDEO_ID = finFileName.substring(0, finFileName.indexOf("_"));
+            } else {
+                throw new Exception("File is not mp4 type. Cannot upload");
+            }
         }
         String fileName = fileService.store(file);
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/downloadFile/")
                 .path(fileName)
                 .toUriString();
-        fileService.encode(fileName);
+        if(isMP4){
+            fileService.encode(fileName);
+        }
         List<String> uploadedFiles = fileService.getUploadedFiles(VIDEO_ID);
-        if( uploadedFiles.size() == FILE_NUMER ){
+        if (uploadedFiles.size() == FILE_NUMER) {
             fileService.generateMPD(uploadedFiles, "720p", VIDEO_ID);
             fileService.generateMPD(uploadedFiles, "480p", VIDEO_ID);
             fileService.generateMPD(uploadedFiles, "360p", VIDEO_ID);
