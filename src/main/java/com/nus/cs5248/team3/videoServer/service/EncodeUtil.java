@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 public class EncodeUtil {
     private static final Logger logger
             = LoggerFactory.getLogger(EncodeUtil.class);
+    //encode video to 720p
     public void encodeTo720p(String filePath, int slashPostion, FFmpegExecutor executor) {
         logger.info("Start encoding 720p now");
         String encodedFilePath = filePath.substring(0, slashPostion+1) + "720p_" + filePath.substring(slashPostion+1);
@@ -39,6 +40,7 @@ public class EncodeUtil {
         executor.createJob(builder).run();
     }
 
+    //encode video to 480p
     public void encodeTo480p(String filePath, int slashPostion, FFmpegExecutor executor) {
         logger.info("Start encoding 480p now");
 
@@ -69,6 +71,7 @@ public class EncodeUtil {
         executor.createJob(builder).run();
     }
 
+    //encode video to 360p
     public void encodeTo360p(String filePath, int slashPostion, FFmpegExecutor executor) {
         logger.info("Start encoding 360p now");
 
@@ -99,7 +102,7 @@ public class EncodeUtil {
         executor.createJob(builder).run();
     }
 
-
+    //encode video to 240p
     public void encodeTo240p(String filePath, int slashPostion, FFmpegExecutor executor) {
         logger.info("Start encoding 240p now");
 

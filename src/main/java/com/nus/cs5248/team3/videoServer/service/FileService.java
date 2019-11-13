@@ -45,6 +45,7 @@ public class FileService {
     @Autowired
     private EncodeUtil encodeUtil;
 
+    //get file storage location, configured in application.properties
     private Path getFileStorageLocation() {
         if (this.fileStorageLocation == null) {
             this.fileStorageLocation = Paths.get(UPLOADED_FOLDER)
@@ -53,6 +54,7 @@ public class FileService {
         return this.fileStorageLocation;
     }
 
+    //get all uploaded files stored on server
     public List<String> findAll() {
         List<String> files = null;
         try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
@@ -69,6 +71,7 @@ public class FileService {
         return files;
     }
 
+    //store file on to server
     public String store(MultipartFile file) throws Exception {
         this.fileStorageLocation = getFileStorageLocation();
         logger.trace("Get into StorageService");
@@ -98,6 +101,7 @@ public class FileService {
     }
 
 
+    //provide file for others to download
     public Resource loadFileAsResource(String fileName) throws Exception {
         this.fileStorageLocation = getFileStorageLocation();
         try {
@@ -117,6 +121,7 @@ public class FileService {
         }
     }
 
+    //encode uploaded files to different resolutions by FFMpeg
     public void encode(String fileName) {
         logger.info("Start encoding now");
         try {
@@ -137,6 +142,7 @@ public class FileService {
         }
     }
 
+    //generate MPD using MP4Box
     public void generateMPD(List<String> uploadedFiles, String resolution, String videoID) {
         String concatFile = resolution + "_" + videoID + ".mp4";
         String concatCommand = "MP4Box -add " + resolution + "_" + uploadedFiles.get(0);
@@ -196,6 +202,7 @@ public class FileService {
 
     }
 
+    //get uploaded videos.
     public List<String> getUploadedFiles(String videoID) {
         List<String> files = null;
         try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
@@ -211,6 +218,7 @@ public class FileService {
         return files;
     }
 
+    //combine MPD from different resolutions
     public void concatMPD(String videoID) {
         List<File> files = null;
         int id = 2;
@@ -243,6 +251,7 @@ public class FileService {
 
     }
 
+    //return all mpd on server
     public List<String> findAllMpd() {
         List<String> files = null;
         try (Stream<Path> walk = Files.walk(Paths.get(UPLOADED_FOLDER))) {
