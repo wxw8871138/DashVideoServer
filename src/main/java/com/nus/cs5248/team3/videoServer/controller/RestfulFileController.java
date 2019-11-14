@@ -35,10 +35,11 @@ public class RestfulFileController {
         Boolean isMP4 = "mp4".equals(Files.getFileExtension(StringUtils.cleanPath(file.getOriginalFilename())));
         if (!isMP4) {
             String finFileName = file.getOriginalFilename();
+            //get the video id and file number from finish file.
             if (finFileName.contains("FIN")) {
                 FILE_NUMBER = Integer.parseInt(finFileName.substring(finFileName.indexOf("_") + 1, finFileName.lastIndexOf("_"))) + 1;
                 VIDEO_ID = finFileName.substring(0, finFileName.indexOf("_"));
-                logger.trace("FILE_NUMBER: " + FILE_NUMBER+ ", VIDEO_ID: " + VIDEO_ID);
+                logger.trace("FILE_NUMBER: " + FILE_NUMBER + ", VIDEO_ID: " + VIDEO_ID);
             } else {
                 throw new Exception("File is not mp4 type. Cannot upload");
             }
@@ -52,17 +53,16 @@ public class RestfulFileController {
         if (isMP4) {
             fileService.encode(fileName);
         }
-        List<String> uploadedFiles = fileService.getUploadedFiles(VIDEO_ID);
-        System.out.println("uploadedFiles.size:" + uploadedFiles.size());
-
-        if (uploadedFiles.size() == FILE_NUMBER) {
+        if (FILE_NUMBER > 0) {
             try {
+                List<String> uploadedFiles = fileService.getUploadedFiles(VIDEO_ID);
+                System.out.println("uploadedFiles.size:" + uploadedFiles.size());
                 fileService.concatSegment(uploadedFiles, "720p", VIDEO_ID);
                 fileService.concatSegment(uploadedFiles, "480p", VIDEO_ID);
                 fileService.concatSegment(uploadedFiles, "360p", VIDEO_ID);
                 fileService.concatSegment(uploadedFiles, "240p", VIDEO_ID);
                 fileService.generateMPD(uploadedFiles, VIDEO_ID);
-            }finally {
+            } finally {
                 FILE_NUMBER = -1;
                 VIDEO_ID = "";
             }
